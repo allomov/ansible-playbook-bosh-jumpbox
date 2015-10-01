@@ -1,0 +1,12 @@
+---
+
+- name: Make direnv file executable
+  file: path=/usr/local/bin/direnv mode=755
+  sudo: yes
+  register: result
+  until: not result|failed
+  retries: 5
+
+- name: Add direnv load to .bashrc
+  shell: echo 'eval "$(direnv hook bash)"' >> /home/{{ansible_ssh_user}}/.bashrc
+  sudo: no

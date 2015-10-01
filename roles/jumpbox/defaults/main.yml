@@ -1,0 +1,18 @@
+---
+ruby_version: 2.2.3
+go_version: 1.4.3
+
+github_path: "/home/{{ansible_ssh_user}}/github"
+
+standard_path: "{{ansible_env.PATH}}"
+
+go_root: "/usr/local/gccgo"
+go_path: "/home/{{ansible_ssh_user}}/go"
+
+go_environment:
+  GOROOT: "{{go_root}}"
+  GOPATH: "{{go_path}}"
+  PATH: "{{go_root}}/bin:{{go_path}}/bin:{{standard_path}}"
+
+ruby_environment:
+  PATH: "/home/{{ansible_ssh_user}}/.rvm/wrappers/default/:{{standard_path}}"

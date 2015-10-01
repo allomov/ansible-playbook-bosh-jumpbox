@@ -1,0 +1,25 @@
+---
+- name: Create temp folder
+  shell: mktemp
+  register: temp_folder
+
+- name: "Get URL for {{ tool.name }} with version {{ tool.version }}"
+  shell: "echo '{{tool.url}}' | sed 's#TOOL_VERSION#{{tool.version}}#g'"
+  register: final_url
+
+- name: "Fetch {{ tool.name }} binaries"
+  get_url: "url={{ final_url.stdout }} dest={{ temp_folder.stdout }}"
+  sudo: no
+  register: result
+  until: not result|failed
+  retries: 5
+
+- name: "Get the name of downloaded file"
+  shell: "ls {{ temp_folder.stdout }}"
+  register: archive_name
+
+- name: "Install {{ tool.name }} binaries to /usr/local/bin"
+  unarchive: "src={{ temp_folder.stdout }}/{{ archive_name.stdout }} dest=/usr/local/bin copy=no"
+
+- name: Remove temp folder
+  file: "src={{temp_folder.stdout}} state=absent"
