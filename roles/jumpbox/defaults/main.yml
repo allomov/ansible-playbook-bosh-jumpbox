@@ -1,6 +1,6 @@
 ---
 ruby_version: 2.2.3
-go_version: 1.4.3
+golang_version: 1.4.3
 
 github_path: "/home/{{ansible_ssh_user}}/github"
 
@@ -8,6 +8,7 @@ standard_path: "{{ansible_env.PATH}}"
 
 go_root: "/usr/local/gccgo"
 go_path: "/home/{{ansible_ssh_user}}/go"
+temp_folder: "/home/{{ansible_ssh_user}}/tmp"
 
 go_environment:
   GOROOT: "{{go_root}}"

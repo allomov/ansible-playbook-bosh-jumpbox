@@ -1,25 +1,36 @@
 ---
 - name: Create temp folder
-  shell: mktemp
-  register: temp_folder
+  file: "dest={{ temp_folder }} state=directory"
 
+# does not work because of this issue https://github.com/ansible/ansible/issues/3103
 - name: "Get URL for {{ tool.name }} with version {{ tool.version }}"
   shell: "echo '{{tool.url}}' | sed 's#TOOL_VERSION#{{tool.version}}#g'"
   register: final_url
 
+- name: "Get file name from URL"
+  set_fact: "file_name={{ tool.name }}.tar.gz"
+  when: (tool.zip is undefined) or (not tool.zip)
+
+- name: "Get file name from URL"
+  set_fact: "file_name={{ tool.name }}.zip"
+  when: (tool.zip is defined) and tool.zip
+
+- debug: var=final_url
+- debug: var=file_name
+
 - name: "Fetch {{ tool.name }} binaries"
-  get_url: "url={{ final_url.stdout }} dest={{ temp_folder.stdout }}"
+  get_url: "url={{ final_url.stdout }}"
   sudo: no
   register: result
   until: not result|failed
   retries: 5
-
-- name: "Get the name of downloaded file"
-  shell: "ls {{ temp_folder.stdout }}"
-  register: archive_name
+  args:
+    dest: "{{ temp_folder }}/{{ file_name }}"
 
 - name: "Install {{ tool.name }} binaries to /usr/local/bin"
-  unarchive: "src={{ temp_folder.stdout }}/{{ archive_name.stdout }} dest=/usr/local/bin copy=no"
-
-- name: Remove temp folder
-  file: "src={{temp_folder.stdout}} state=absent"
+  unarchive: "src={{ temp_folder }}/{{ file_name }}"
+  sudo: yes
+  args:
+    creates: "/usr/local/bin/{{ tool.name }}"
+    dest: /usr/local/bin
+    copy: no

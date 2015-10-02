@@ -5,19 +5,20 @@ golang_version: "1.4.3"
 # it will be fixed in Ansible 2.0+
 tools:
   direnv:
+    name: "direnv"
     name: https://github.com/direnv/direnv/archive/v2.7.0.tar.gz
     version: 2.7.0
-    name: "direnv"
   spiff:
     name: "spiff"
     version: "1.0.7"
     url: "https://github.com/cloudfoundry-incubator/spiff/releases/download/vTOOL_VERSION/spiff_linux_amd64.zip"
+    zip: yes
   spruce:
     name: "spruce"
     version: "0.9.0"
     url: "https://github.com/geofffranks/spruce/releases/download/vTOOL_VERSION/spruce_TOOL_VERSION_linux_amd64.tar.gz"
   cf_cli:
-    name: "cf-cli"
+    name: "cf"
     version: "6.12.4"
     url: "https://cli.run.pivotal.io/stable?release=linux64-binary&version=TOOL_VERSION"
   bosh_init:
