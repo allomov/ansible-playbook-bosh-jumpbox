@@ -15,8 +15,7 @@
   set_fact: "file_name={{ tool.name }}.zip"
   when: (tool.zip is defined) and tool.zip
 
-- debug: var=final_url
-- debug: var=file_name
+- debug: "msg=Fethcing archive {{file_name}} from {{final_url}}"
 
 - name: "Fetch {{ tool.name }} binaries"
   get_url: "url={{ final_url.stdout }}"
