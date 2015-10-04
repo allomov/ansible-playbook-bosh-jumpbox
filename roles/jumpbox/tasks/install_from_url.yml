@@ -1,4 +1,10 @@
 ---
+
+# This task fetches archive with built binary of a tool from URL,
+# that may contain TOOL_VERSION substring that will be replace with correct version.
+# After archive is fetched it is extracted and binary is placed to 
+# /usr/local/bin
+
 - name: Create temp folder
   file: "dest={{ temp_folder }} state=directory"
 
@@ -7,15 +13,19 @@
   shell: "echo '{{tool.url}}' | sed 's#TOOL_VERSION#{{tool.version}}#g'"
   register: final_url
 
-- name: "Get file name from URL"
-  set_fact: "file_name={{ tool.name }}.tar.gz"
-  when: (tool.zip is undefined) or (not tool.zip)
+- name: "Set file_name to have tar.gz extentnion"
+  set_fact: "file_name={{ tool.name }}-{{ tool.version }}.tar.gz"
+  when: tool.type == "tar"
 
-- name: "Get file name from URL"
-  set_fact: "file_name={{ tool.name }}.zip"
-  when: (tool.zip is defined) and tool.zip
+- name: "Set file_name to have zip extentnion"
+  set_fact: "file_name={{ tool.name }}-{{ tool.version }}.zip"
+  when: tool.type == "zip"
 
-- debug: "msg=Fethcing archive {{file_name}} from {{final_url}}"
+- name: "Set file_name to have no extentnion"
+  set_fact: "file_name={{ tool.name }}-{{ tool.version }}"
+  when: tool.type == "raw"
+
+- debug: "msg='Fetching archive {{ file_name }} from {{ final_url.stdout }}'"
 
 - name: "Fetch {{ tool.name }} binaries"
   get_url: "url={{ final_url.stdout }}"
@@ -26,10 +36,34 @@
   args:
     dest: "{{ temp_folder }}/{{ file_name }}"
 
-- name: "Install {{ tool.name }} binaries to /usr/local/bin"
+- name: "Unarchive {{ tool.name }} binaries"
   unarchive: "src={{ temp_folder }}/{{ file_name }}"
-  sudo: yes
+  when: not tool.type == "raw"
+  sudo: no
   args:
-    creates: "/usr/local/bin/{{ tool.name }}"
-    dest: /usr/local/bin
+    dest: "{{ temp_folder }}"
     copy: no
+
+- name: Find out where is the binary file
+  shell: "find {{ temp_folder }} -name {{ tool.name }}"
+  when: not tool.type == "raw"
+  register: binary_file
+
+- name: "Copy binary file"
+  shell: "cp {{ binary_file.stdout }} /usr/local/bin/{{ tool.name }}"
+  when: not tool.type == "raw"
+  sudo: yes
+
+- name: Find out where is the binary file
+  shell: "ls {{ temp_folder }}/{{ file_name }}"
+  when: tool.type == "raw"
+  register: binary_file
+
+- name: "Copy binary file"
+  shell: "cp {{ binary_file.stdout }} /usr/local/bin/{{ tool.name }}"
+  when: tool.type == "raw"
+  sudo: yes
+
+- name: "Set mode"
+  file: "path=/usr/local/bin/{{ tool.name }} mode=0755 owner={{ ansible_ssh_user }}"
+  sudo: yes
